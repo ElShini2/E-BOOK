@@ -1,0 +1,6 @@
+# Ejecutables de Go
+*.exe
+*.exe.
+*.exe.bin
+*.test
+*.out
