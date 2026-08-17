@@ -5,7 +5,6 @@ import (
 	"fmt"
 )
 
-// Libro representa la estructura de un e-book dentro de la biblioteca.
 // Los campos inician en Mayúscula para permitir su exportación/serialización.
 type Libro struct {
 	ID             int    `json:"id"`

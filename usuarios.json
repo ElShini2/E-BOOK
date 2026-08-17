@@ -1,0 +1,18 @@
+[
+  {
+    "id": 101,
+    "nombre": "Administrador Root",
+    "email": "admin@ebooks.com",
+    "password": "admin123",
+    "rol": "ADMIN",
+    "favoritos": []
+  },
+  {
+    "id": 102,
+    "nombre": "Michaell Salvador",
+    "email": "cliente@ebooks.com",
+    "password": "cliente123",
+    "rol": "CLIENTE",
+    "favoritos": []
+  }
+]

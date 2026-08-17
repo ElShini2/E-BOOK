@@ -3,66 +3,61 @@ package usuario
 import (
 	"e-book/modelo"
 	"errors"
+	"strings"
 )
 
-// Constantes para definir los roles del sistema
+type RolUsuario string
+
 const (
-	RolAdmin   = "ADMIN"
-	RolCliente = "CLIENTE"
+	RolAdmin   RolUsuario = "ADMIN"
+	RolCliente RolUsuario = "CLIENTE"
 )
 
-// Usuario representa la entidad de un usuario (Admin o Cliente).
 type Usuario struct {
 	ID        int             `json:"id"`
 	Nombre    string          `json:"nombre"`
 	Email     string          `json:"email"`
-	Password  string          `json:"-"` // No se exporta en la respuesta JSON por seguridad
-	Rol       string          `json:"rol"`
+	Password  string          `json:"password"` // Campo exportado para persistencia en JSON
+	Rol       RolUsuario      `json:"rol"`
 	Favoritos []*modelo.Libro `json:"favoritos"`
 }
 
-// NewUsuario crea una nueva instancia de usuario validando sus datos.
-func NewUsuario(id int, nombre, email, password, rol string) (*Usuario, error) {
-	if nombre == "" || email == "" || password == "" {
-		return nil, errors.New("el nombre, correo y contraseña no pueden estar vacíos")
-	}
-
-	if rol != RolAdmin && rol != RolCliente {
-		rol = RolCliente // Rol por defecto si no es admin
+// NewUsuario crea un nuevo usuario validando datos básicos.
+func NewUsuario(id int, nombre, email, password string, rol RolUsuario) (*Usuario, error) {
+	if strings.TrimSpace(nombre) == "" || strings.TrimSpace(email) == "" || strings.TrimSpace(password) == "" {
+		return nil, errors.New("los datos del usuario no pueden estar vacíos")
 	}
 
 	return &Usuario{
 		ID:        id,
 		Nombre:    nombre,
-		Email:     email,
+		Email:     strings.ToLower(strings.TrimSpace(email)),
 		Password:  password,
 		Rol:       rol,
-		Favoritos: []*modelo.Libro{},
+		Favoritos: make([]*modelo.Libro, 0),
 	}, nil
 }
 
-// ValidarPassword verifica si la contraseña ingresada coincide.
-func (u *Usuario) ValidarPassword(pass string) bool {
-	return u.Password == pass
+// ValidarPassword comprueba si la contraseña coincide.
+func (u *Usuario) ValidarPassword(password string) bool {
+	return u.Password == password
 }
 
-// AgregarFavorito añade un libro a la lista de favoritos.
-func (u *Usuario) AgregarFavorito(libro *modelo.Libro) error {
-	if libro == nil {
-		return errors.New("no se puede agregar un libro nulo")
+// AgregarFavorito añade un libro al listado de favoritos evitando duplicados.
+func (u *Usuario) AgregarFavorito(l *modelo.Libro) error {
+	if l == nil {
+		return errors.New("el libro no puede ser nulo")
 	}
-
-	for _, fav := range u.Favoritos {
-		if fav.ID == libro.ID {
-			return errors.New("el libro ya se encuentra en favoritos")
+	for _, f := range u.Favoritos {
+		if f.ID == l.ID {
+			return errors.New("el libro ya está en tu lista de favoritos")
 		}
 	}
-
-	u.Favoritos = append(u.Favoritos, libro)
+	u.Favoritos = append(u.Favoritos, l)
 	return nil
 }
 
-// ObtenerFavoritos retorna la lista de libros favoritos.
+// ObtenerFavoritos retorna la lista de favoritos del usuario.
 func (u *Usuario) ObtenerFavoritos() []*modelo.Libro {
 	return u.Favoritos
 }

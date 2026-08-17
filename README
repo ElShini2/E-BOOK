@@ -1,10 +1,10 @@
 E-Book - Sistema de Gestión e Interfaz de Lectura Digital
-Un sistema backend y de consola desarrollado en Go (Golang) enfocado en la gestión de libros electrónicos, perfiles de usuario con Control de Acceso Basado en Roles (RBAC) y un servidor web HTTP en segundo plano.
+Un sistema backend y de consola desarrollado en Go enfocado en la gestión de libros electrónicos, perfiles de usuario con Control de Acceso Basado en Roles y un servidor web HTTP en segundo plano.
 
 🚀 Características Principales
-Estructura Modular Clean Architecture: Separación clara de responsabilidades en paquetes (modelo, usuario, catalogo).
+Estructura Modular: Separación clara de responsabilidades en paquetes (modelo, usuario, catalogo).
 
-Control de Acceso Basado en Roles (RBAC):
+Control de Acceso Basado en Roles:
 
 ADMIN: Publicación de nuevos e-books, gestión del catálogo general y monitoreo de usuarios registrados.
 

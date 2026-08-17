@@ -1,0 +1,30 @@
+[
+  {
+    "id": 1,
+    "titulo": "El Quijote",
+    "autor": "Miguel de Cervantes",
+    "genero": "Clasico",
+    "paginas_totales": 863
+  },
+  {
+    "id": 2,
+    "titulo": "Cien Anos de Soledad",
+    "autor": "Gabriel Garcia Marquez",
+    "genero": "Realismo Magico",
+    "paginas_totales": 471
+  },
+  {
+    "id": 3,
+    "titulo": "1984",
+    "autor": "George Orwell",
+    "genero": "Ciencia Ficcion",
+    "paginas_totales": 328
+  },
+  {
+    "id": 4,
+    "titulo": "prueba",
+    "autor": "anonimo",
+    "genero": "n/a",
+    "paginas_totales": 1
+  }
+]

@@ -2,99 +2,123 @@ package catalogo
 
 import (
 	"e-book/modelo"
+	"encoding/json"
 	"errors"
+	"os"
 	"strings"
+	"sync"
 )
 
-// GestorCatalogo define la INTERFAZ que establece el contrato de operaciones
-// que cualquier sistema de catálogo debe implementar para consultar e-books.
-type GestorCatalogo interface {
-	BuscarPorTitulo(titulo string) (*modelo.Libro, error)
-	FiltrarPorGenero(genero string) ([]*modelo.Libro, error)
-	FiltrarPorAutor(autor string) ([]*modelo.Libro, error)
-	ObtenerTodos() []*modelo.Libro
-}
+const archivoLibros = "libros.json"
 
-// ServicioCatalogo es la estructura que implementa la interfaz GestorCatalogo.
-// Almacena la colección de libros en memoria mediante un slice inmutable de punteros.
+// ServicioCatalogo gestiona la colección de e-books con persistencia en disco y control concurrente.
 type ServicioCatalogo struct {
 	libros []*modelo.Libro
+	mu     sync.RWMutex
 }
 
-// NewServicioCatalogo es el CONSTRUCTOR que inicializa el catálogo con una lista base de libros.
-func NewServicioCatalogo(librosIniciales []*modelo.Libro) *ServicioCatalogo {
-	return &ServicioCatalogo{
-		libros: librosIniciales,
+// NewServicioCatalogo inicializa el catálogo cargando los datos guardados en disco.
+func NewServicioCatalogo() *ServicioCatalogo {
+	sc := &ServicioCatalogo{
+		libros: make([]*modelo.Libro, 0),
 	}
+	_ = sc.cargarDesdeDisco()
+	return sc
 }
 
-// BuscarPorTitulo busca un libro por coincidencia exacta o parcial de su título.
-// Devuelve un error nativo si el título ingresado es inválido o si no encuentra el libro.
-func (s *ServicioCatalogo) BuscarPorTitulo(titulo string) (*modelo.Libro, error) {
-	// MANEJO DE ERRORES: Validación de entrada
-	if strings.TrimSpace(titulo) == "" {
-		return nil, errors.New("el término de búsqueda no puede estar vacío")
+// GuardarEnDisco serializa el slice de libros a JSON legible en disco.
+func (s *ServicioCatalogo) GuardarEnDisco() error {
+	s.mu.RLock()
+	defer s.mu.RUnlock()
+
+	datos, err := json.MarshalIndent(s.libros, "", "  ")
+	if err != nil {
+		return err
+	}
+	return os.WriteFile(archivoLibros, datos, 0644)
+}
+
+// cargarDesdeDisco lee el archivo JSON al iniciar la aplicación.
+func (s *ServicioCatalogo) cargarDesdeDisco() error {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+
+	if _, err := os.Stat(archivoLibros); os.IsNotExist(err) {
+		return nil
 	}
 
-	tituloLwr := strings.ToLower(titulo)
+	datos, err := os.ReadFile(archivoLibros)
+	if err != nil {
+		return err
+	}
 
-	// Recorremos el slice del catálogo
+	return json.Unmarshal(datos, &s.libros)
+}
+
+// ObtenerSiguienteID calcula el ID más alto existente y suma 1 para evitar duplicados.
+func (s *ServicioCatalogo) ObtenerSiguienteID() int {
+	s.mu.RLock()
+	defer s.mu.RUnlock()
+
+	maxID := 0
 	for _, l := range s.libros {
-		if strings.Contains(strings.ToLower(l.Titulo), tituloLwr) {
-			return l, nil // Retorno exitoso: (puntero, nil)
+		if l.ID > maxID {
+			maxID = l.ID
 		}
 	}
-
-	// MANEJO DE ERRORES: Libro no encontrado
-	return nil, errors.New("no se encontró ningún libro con el título especificado")
+	return maxID + 1
 }
 
-// FiltrarPorGenero retorna una colección de libros pertenecientes a una categoría/género.
-func (s *ServicioCatalogo) FiltrarPorGenero(genero string) ([]*modelo.Libro, error) {
-	if strings.TrimSpace(genero) == "" {
-		return nil, errors.New("debe especificar un género válido para filtrar")
+// AgregarLibro añade un nuevo libro y sincroniza el archivo en disco.
+func (s *ServicioCatalogo) AgregarLibro(l *modelo.Libro) error {
+	if l == nil {
+		return errors.New("no se puede agregar un libro nulo")
 	}
 
-	var resultado []*modelo.Libro
-	generoLwr := strings.ToLower(genero)
+	s.mu.Lock()
+	s.libros = append(s.libros, l)
+	s.mu.Unlock()
 
-	for _, l := range s.libros {
-		if strings.ToLower(l.Genero) == generoLwr {
-			resultado = append(resultado, l)
+	return s.GuardarEnDisco()
+}
+
+// EliminarLibroPorID busca un libro por ID, lo remueve y sincroniza el archivo en disco.
+func (s *ServicioCatalogo) EliminarLibroPorID(id int) error {
+	s.mu.Lock()
+	encontrado := false
+	for i, l := range s.libros {
+		if l.ID == id {
+			s.libros = append(s.libros[:i], s.libros[i+1:]...)
+			encontrado = true
+			break
 		}
 	}
+	s.mu.Unlock()
 
-	// MANEJO DE ERRORES: Colección vacía
-	if len(resultado) == 0 {
-		return nil, errors.New("no existen libros registrados bajo el género ingresado")
+	if !encontrado {
+		return errors.New("no se encontró ningún libro con el ID especificado")
 	}
 
-	return resultado, nil
+	return s.GuardarEnDisco()
 }
 
-// FiltrarPorAutor retorna todos los libros escritos por un autor determinado.
-func (s *ServicioCatalogo) FiltrarPorAutor(autor string) ([]*modelo.Libro, error) {
-	if strings.TrimSpace(autor) == "" {
-		return nil, errors.New("el nombre del autor no puede estar vacío")
-	}
-
-	var resultado []*modelo.Libro
-	autorLwr := strings.ToLower(autor)
-
-	for _, l := range s.libros {
-		if strings.Contains(strings.ToLower(l.Autor), autorLwr) {
-			resultado = append(resultado, l)
-		}
-	}
-
-	if len(resultado) == 0 {
-		return nil, errors.New("no se encontraron obras asociadas al autor indicado")
-	}
-
-	return resultado, nil
-}
-
-// ObtenerTodos retorna la lista completa de libros almacenados en el catálogo.
+// ObtenerTodos retorna una copia del listado de libros disponibles.
 func (s *ServicioCatalogo) ObtenerTodos() []*modelo.Libro {
+	s.mu.RLock()
+	defer s.mu.RUnlock()
 	return s.libros
+}
+
+// BuscarPorTitulo busca un libro por coincidencia insensible a mayúsculas/minúsculas.
+func (s *ServicioCatalogo) BuscarPorTitulo(titulo string) (*modelo.Libro, error) {
+	s.mu.RLock()
+	defer s.mu.RUnlock()
+
+	tLower := strings.ToLower(strings.TrimSpace(titulo))
+	for _, l := range s.libros {
+		if strings.Contains(strings.ToLower(l.Titulo), tLower) {
+			return l, nil
+		}
+	}
+	return nil, errors.New("libro no encontrado en el catálogo")
 }
