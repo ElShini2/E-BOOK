@@ -1,30 +1,18 @@
 [
   {
-    "id": 1,
-    "titulo": "El Quijote",
-    "autor": "Miguel de Cervantes",
-    "genero": "Clasico",
-    "paginas_totales": 863
+    "id": 5,
+    "titulo": "El Jinete de Bronce",
+    "autor": "PAULLINA SIMONS",
+    "genero": "NOVELA HISTORICA",
+    "paginas_totales": 734,
+    "archivo_pdf": "libro_1787494555_El Jinete de Bronce.pdf"
   },
   {
-    "id": 2,
-    "titulo": "Cien Anos de Soledad",
-    "autor": "Gabriel Garcia Marquez",
-    "genero": "Realismo Magico",
-    "paginas_totales": 471
-  },
-  {
-    "id": 3,
-    "titulo": "1984",
-    "autor": "George Orwell",
-    "genero": "Ciencia Ficcion",
-    "paginas_totales": 328
-  },
-  {
-    "id": 4,
-    "titulo": "prueba",
-    "autor": "anonimo",
-    "genero": "n/a",
-    "paginas_totales": 1
+    "id": 6,
+    "titulo": "Criptografia y seguridad en redes",
+    "autor": "Marcelo Sampaio de Alencar",
+    "genero": "Informativo",
+    "paginas_totales": 324,
+    "archivo_pdf": "libro_1787513744_dokumen.pub_cryptography-and-network-security-9788770224079-9788770224062.pdf"
   }
 ]
