@@ -1,32 +1,34 @@
-E-Book - Sistema de Gestión e Interfaz de Lectura Digital
-Un sistema backend y de consola desarrollado en Go enfocado en la gestión de libros electrónicos, perfiles de usuario con Control de Acceso Basado en Roles y un servidor web HTTP en segundo plano.
+# 📚 Sistema de Gestión de E-Books & E-Reader en Go
 
-🚀 Características Principales
-Estructura Modular: Separación clara de responsabilidades en paquetes (modelo, usuario, catalogo).
+Una plataforma integral de biblioteca digital desarrollada en **Go (Golang)** que combina un backend concurrente con una interfaz de consola interactiva y un visor web tipo E-Reader en tiempo real.
 
-Control de Acceso Basado en Roles:
+---
 
-ADMIN: Publicación de nuevos e-books, gestión del catálogo general y monitoreo de usuarios registrados.
+## 🚀 Características Principales
 
-CLIENTE: Consulta del catálogo, administración de la lista personal de favoritos y seguimiento de lectura.
+* **Arquitectura Modular Limpia:** Separación estricta de responsabilidades en paquetes (`modelo`, `catalogo`, `usuario`, `main`).
+* **Carga Automática de Libros (.PDF):** El Administrador carga archivos PDF y el sistema detecta de forma automática la cantidad de páginas mediante escaneo binario en Go puro, asignando identificadores únicos y copiando el archivo al servidor.
+* **Visor E-Reader Dedicado (Mozilla PDF.js):** 
+  * Renderizado estricto de una página a la vez en un lienzo centrado.
+  * Navegación con controles en pantalla y flechas del teclado (`←` / `→`).
+  * Apertura automática del navegador predeterminado al seleccionar un libro.
+* **Autoguardado de Progreso:** Al cambiar de página, el sistema sincroniza y persiste de manera asíncrona la última página leída para cada usuario.
+* **Control de Acceso Basado en Roles (RBAC):** Flujo de autenticación obligatorio con segregación de privilegios entre `ADMIN` (gestión del catálogo) y `CLIENTE` (lectura y favoritos).
+* **Concurrencia Segura:** Servidor HTTP ejecutado en una *goroutine* independiente protegido contra condiciones de carrera mediante `sync.RWMutex`.
+* **Persistencia en Disco:** Serialización y deserialización de datos en tiempo real en `usuarios.json` y `libros.json`.
 
-Encapsulación y Validación Defensiva: Constructores dedicados (NewLibro, NewUsuario) que validan la integridad de datos e imponen reglas de negocio antes de modificar el estado.
+---
 
-Manejo Idiomático de Errores: Validación explícita de situaciones anómalas mediante la interfaz error integrada en Go.
+## 📁 Estructura del Proyecto
 
-Servidor Web HTTP Paralelo: Exposición de endpoints de consulta en formato JSON ejecutados concurrentemente mediante Goroutines.
-
-Sin Dependencias Externas: Construido 100% con las librerías estándar de Go.
-
-📂 Estructura del Proyecto
-Plaintext
-E-BOOK/
-├── catalogo/
-│   └── servicio.go     # Servicio para consultas e inventario del catálogo
-├── modelo/
-│   └── modelo.go       # Entidad Libro, constructor y validaciones de datos
-├── usuario/
-│   └── usuario.go      # Entidad Usuario, roles, contraseñas y favoritos
-├── go.mod              # Definición y gestión del módulo principal
-├── main.go             # Punto de entrada (CLI, login con roles y servidor HTTP)
-└── README.md           # Documentación del proyecto
+├── catalogo/        # Lógica del catálogo de libros en memoria
+│   └── servicio.go
+├── modelo/          # Structs y constructores con validación (Libro)
+│   └── libro.go
+├── usuario/         # Estructuras de usuario, roles y progreso de lectura
+│   └── usuario.go
+├── uploads/         # Directorio de almacenamiento de archivos PDF
+├── libros.json      # Base de datos persistente del catálogo
+├── usuarios.json    # Base de datos persistente de usuarios y progreso
+├── main.go          # Servidor HTTP, visor web y menú de consola
+└── README.md
